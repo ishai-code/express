@@ -16,19 +16,19 @@ id2 = "639383bd-3dc5-46d1-9121-27fb6ac5a61d";
 id3 = "38873ed8-c13a-441f-9d8c-2987ece26b7b";
 
 const users = [
-  { id: id1, name: "shay", pass: "1234" },
-  { id: id2, name: "dan", pass: "5687" },
-  { id: id3, name: "elad", pass: "8743" },
+  { id: id1, email: "shay@gmail.com", pass: "1234" },
+  { id: id2, email: "dan@gmail.com", pass: "5687" },
+  { id: id3, email: "elad@gmail.com", pass: "8743" },
 ];
 
 function hashPass(pass) {
-  let hash = bcrypt.hashSync(pass, saltRounds);
+  const hash = bcrypt.hashSync(pass, saltRounds);
   return hash;
 }
 
-users.forEach((element) => {
-  element.pass = hashPass(element.pass);
-  console.log(element.pass);
+users.forEach((user) => {
+  user.pass = hashPass(user.pass);
+  console.log(user.pass);
 });
 
 app.listen(port, () => {
@@ -40,71 +40,50 @@ app.get("/", (req, res) => {
 });
 
 app.get("/users/:id", (req, res) => {
-  let bool = 0;
-  users.forEach((element) => {
-    if (element.id == req.params.id) {
-      res.send(element);
-      bool++;
-    }
-  });
-  if (!bool) {
+  if (users.find((user) => user.id === req.params.id)) {
+    res.send(user);
+  } else {
     res.send("fold");
   }
 });
 
-app.post("/users", (req, res) => {
+app.post("/users/addUser", (req, res) => {
   const password = hashPass(req.body.pass);
-  const newUser = { id: createId(), name: req.body.name, pass: password };
+  const newUser = { id: createId(), email: req.body.email, pass: password };
   users.push(newUser);
   res.send(users);
 });
 
 app.put("/users/:id", (req, res) => {
   const userId = req.params.id;
-  let bool = 0;
-  users.forEach((element) => {
-    if (element.id == userId) {
-      element.name = req.body.name;
-      res.send(users);
-      bool++;
-    }
-  });
-  if (!bool) {
+  if (users.find((user) => user.id === userId)) {
+    user.email = req.body.email;
+    res.send(users);
+  } else {
     res.send("not exist such a user in our data");
   }
 });
 
-app.delete("/users/:id", (req, res) => {
+app.delete("/users/delete/:id", (req, res) => {
   const userId = req.params.id;
-  let bool = 0;
-  users.forEach((element, index) => {
-    if (element.id == userId) {
-      users.splice(index, 1);
-      res.send(users);
-      bool++;
-    }
-  });
-  if (!bool) {
+  if (users.find((user) => user.id === userId)) {
+    const index = users.indexOf(userId);
+    users.splice(index, 1);
+    res.send(users);
+  } else {
     res.send("not exist such a user in our data");
   }
 });
 
-
-app.post("/users", (req, res) => {
-  const userName = req.body.name;
+app.post("/users/login", (req, res) => {
+  const userEmail = req.body.email;
   const userPass = req.body.pass;
-  let bool = 0;
-  users.forEach((element) => {
-    if (element.name == userName & bcrypt.compareSync(userPass, element.pass)) {
-      res.send("user is connected");
-      bool++;
-    }
-  });
-  if (!bool) {
+  if (
+    users.find(
+      (user) =>
+        (user.email === userEmail) & bcrypt.compareSync(userPass, user.pass))) {
+    res.send("user is connected");
+  } else {
     res.send("not exist such a user in our data");
   }
 });
-
-
-
-
