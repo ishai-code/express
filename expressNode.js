@@ -1,5 +1,6 @@
 const { v4: uuidv4 } = require("uuid");
 const bcrypt = require("bcrypt");
+const validator = require("validator");
 express = require("express");
 const app = express();
 const port = 8080;
@@ -26,6 +27,14 @@ function hashPass(pass) {
   return hash;
 }
 
+function emailValidator(email) {
+  return validator.isEmail(email);
+}
+
+function passValidator(pass) {
+  return validator.isStrongPassword(pass);
+}
+
 users.forEach((user) => {
   user.pass = hashPass(user.pass);
   console.log(user.pass);
@@ -48,19 +57,30 @@ app.get("/users/:id", (req, res) => {
 });
 
 app.post("/users/addUser", (req, res) => {
-  const password = hashPass(req.body.pass);
-  const newUser = { id: createId(), email: req.body.email, pass: password };
-  users.push(newUser);
-  res.send(users);
+  let { email, pass } = req.body;
+  const password = hashPass(pass);
+  if (emailValidator(email) & passValidator(password)) {
+    const newUser = { id: createId(), email: email, pass: password };
+    users.push(newUser);
+    res.send(`user added successfully this the update list`);
+  } else {
+    res.send("the email or the password is not valid");
+  }
 });
 
 app.put("/users/:id", (req, res) => {
   const userId = req.params.id;
-  if (users.find((user) => user.id === userId)) {
-    user.email = req.body.email;
-    res.send(users);
+  const {email, password} = req.body
+  if (emailValidator(email) & passValidator(password)) {
+    if (users.find((user) => user.id === userId)) {
+      user.email = email
+      user.pass = password
+      res.send(users);
+    } else {
+      res.send("not exist such a user in our data");
+    }
   } else {
-    res.send("not exist such a user in our data");
+    res.send("the email or the password is not valid");
   }
 });
 
@@ -81,7 +101,9 @@ app.post("/users/login", (req, res) => {
   if (
     users.find(
       (user) =>
-        (user.email === userEmail) & bcrypt.compareSync(userPass, user.pass))) {
+        (user.email === userEmail) & bcrypt.compareSync(userPass, user.pass)
+    )
+  ) {
     res.send("user is connected");
   } else {
     res.send("not exist such a user in our data");
