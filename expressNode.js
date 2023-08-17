@@ -12,9 +12,9 @@ function createId() {
   return uuidv4();
 }
 
-id1 = "b1b47324-fc89-4ecd-a60b-51448f6caeff";
-id2 = "639383bd-3dc5-46d1-9121-27fb6ac5a61d";
-id3 = "38873ed8-c13a-441f-9d8c-2987ece26b7b";
+const id1 = "b1b47324-fc89-4ecd-a60b-51448f6caeff";
+const id2 = "639383bd-3dc5-46d1-9121-27fb6ac5a61d";
+const id3 = "38873ed8-c13a-441f-9d8c-2987ece26b7b";
 
 const users = [
   { id: id1, email: "shay@gmail.com", pass: "1234" },
@@ -70,11 +70,13 @@ app.post("/users/addUser", (req, res) => {
 
 app.put("/users/:id", (req, res) => {
   const userId = req.params.id;
-  const {email, password} = req.body
+  const {email, pass} = req.body
+  const password = hashPass(pass);
   if (emailValidator(email) & passValidator(password)) {
     if (users.find((user) => user.id === userId)) {
-      user.email = email
-      user.pass = password
+      const userIndex = users.findIndex((user) => user.id === userId) 
+      users[userIndex].email = email
+      users[userIndex].pass = password
       res.send(users);
     } else {
       res.send("not exist such a user in our data");
